@@ -27,9 +27,22 @@ public class UpdateJobRunner
     public static Job createUpdateJob(int jobId, String inputDirectory, String outputDirectory)
         throws IOException
     {
-        System.out.println("TODO");
-        System.exit(1);
-        return null;
+    	Configuration conf = new Configuration();
+        conf.addResource(new Path("/hadoop/projects/hadoop-2.7.1/conf/core-site.xml"));
+        conf.addResource(new Path("/hadoop/projects/hadoop-2.7.1/conf/hdfs-site.xml"));
+        
+    	Job init_job = new Job(conf, Integer.toString(jobId));
+        init_job.setJarByClass(KMeans.class);
+        init_job.setMapperClass(PointToClusterMapper.class);
+        init_job.setMapOutputKeyClass(IntWritable.class);
+        init_job.setMapOutputValueClass(Point.class);
+        init_job.setReducerClass(ClusterToPointReducer.class);
+        init_job.setOutputKeyClass(IntWritable.class);
+        init_job.setOutputValueClass(Point.class);
+        FileInputFormat.addInputPath(init_job, new Path(inputDirectory));
+        FileOutputFormat.setOutputPath(init_job, new Path(outputDirectory));
+        init_job.setInputFormatClass(KeyValueTextInputFormat.class);
+        return init_job;
     }
 
     /**
@@ -48,10 +61,32 @@ public class UpdateJobRunner
      * @return The number of iterations that were executed.
      */
     public static int runUpdateJobs(int maxIterations, String inputDirectory,
-        String outputDirectory)
-    {
-        System.out.println("TODO");
-        System.exit(1);
-        return 0;
+        String outputDirectory) {
+        
+    	ArrayList<Point> current_centroids = KMeans.centroids; 
+    			
+    	for(int i=0; i<maxIterations; i++){
+    		
+    		try{
+    			System.out.println("Creating job with id "+i);
+	    		Job init_job = createUpdateJob(i, inputDirectory, outputDirectory);
+	    		init_job.waitForCompletion(true);
+	    		
+	    		ArrayList<Point> new_centroids = KMeans.centroids;
+	    		
+	    		if(current_centroids == new_centroids){
+	    			System.out.println("Centroids have not changed in this iteration. Thus exiting");
+	    			return i;
+	    		}
+    		} catch(IOException e){
+    			System.out.println("IOException in creating jobs");
+    		} catch (InterruptedException e) {
+    			System.out.println("InterruptedException while emitting from mapper");
+    		} catch (ClassNotFoundException e) {
+    			System.out.println("ClassNotFoundException while emitting from mapper");
+    		}
+    		
+    	}
+    	return maxIterations;
     }
 }
