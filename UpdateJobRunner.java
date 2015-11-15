@@ -102,10 +102,21 @@ public class UpdateJobRunner
     	
     	//Return true even if one of the centroids is different
     	for (int i = 0; i < old_centroid.size(); i++) {
-    		if (old_centroid.get(i).compareTo(new_centroid.get(i)) != 0) {
+    		if (!isEpsilonDistanceAway(old_centroid.get(i), new_centroid.get(i))) 
     			return true;
-    		}
     	}
     	return false;	
+    }
+    
+    /**
+     * Checks if two points are epsilon distance away from each other. Returns
+     * true if they are
+     */
+    public static boolean isEpsilonDistanceAway(Point old_centroid, Point new_centroid){
+
+    	float difference = Math.abs(Point.distance(old_centroid, new_centroid));
+    	if (difference < 0.00001)
+			return true;
+		return false;
     }
 }
