@@ -105,25 +105,24 @@ public class Point implements WritableComparable<Point> {
      * 
      * Return 0 if the two points are the same
      */
-    @Override
-    public int compareTo(Point O)
-    {   
-    	int dim1 = O.getDimension();
-        int dim2 = getDimension();
-
-        //First checking if their dimensions are the same
-        if (dim1 == dim2){
-        	
-        	//Checking if each coordinate is the same
-            for(int i = 0; i<dim1; i++){
-                if(coordinates.get(i) != O.coordinates.get(i)){
-                    return 1;
-                }
-            }
-            return 0;
-        }
-        return 1;
-    }
+     @Override
+     public int compareTo(Point o){
+    	 
+    	if (this.getDimension() != o.getDimension()){
+    		System.err.println("Dimension do not match");
+    		return -1;
+    	}
+    	 
+    	for (int i=0; i<this.getDimension(); i++){
+    		float difference = this.coordinates.get(i) - o.coordinates.get(i);
+    		 
+    		if (difference > 0.00001)
+    			return 1;
+    		else if (difference < -0.00001)
+    			return -1;
+    	}
+    	return 0;
+     }
 
     /**
      * @return The L2 distance between two points.

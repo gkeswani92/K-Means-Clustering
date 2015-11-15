@@ -25,22 +25,24 @@ public class UpdateJobRunner
      * @precondition The global centroids variable has been set.
      */
     public static Job createUpdateJob(int jobId, String inputDirectory, String outputDirectory)
-        throws IOException
-    {
-    	Configuration conf = new Configuration();
-        conf.addResource(new Path("/hadoop/projects/hadoop-2.7.1/conf/core-site.xml"));
-        conf.addResource(new Path("/hadoop/projects/hadoop-2.7.1/conf/hdfs-site.xml"));
-        
-    	Job init_job = new Job(conf, Integer.toString(jobId));
+        throws IOException {
+    	
+    	Job init_job = new Job(new Configuration(), Integer.toString(jobId));
         init_job.setJarByClass(KMeans.class);
+        
+        //Setting up the mapper
         init_job.setMapperClass(PointToClusterMapper.class);
         init_job.setMapOutputKeyClass(IntWritable.class);
         init_job.setMapOutputValueClass(Point.class);
+        
+        //Setting up the reducer
         init_job.setReducerClass(ClusterToPointReducer.class);
-        init_job.setOutputKeyClass(IntWritable.class);
-        init_job.setOutputValueClass(Point.class);
+        
+        //init_job.setOutputKeyClass(IntWritable.class);
+        //init_job.setOutputValueClass(Point.class);
+        
         FileInputFormat.addInputPath(init_job, new Path(inputDirectory));
-        FileOutputFormat.setOutputPath(init_job, new Path(outputDirectory));
+        FileOutputFormat.setOutputPath(init_job, new Path(outputDirectory+"/"+Integer.toString(jobId)));
         init_job.setInputFormatClass(KeyValueTextInputFormat.class);
         return init_job;
     }
@@ -61,32 +63,49 @@ public class UpdateJobRunner
      * @return The number of iterations that were executed.
      */
     public static int runUpdateJobs(int maxIterations, String inputDirectory,
-        String outputDirectory) {
+        String outputDirectory) throws IOException, InterruptedException, ClassNotFoundException {
         
-    	ArrayList<Point> current_centroids = KMeans.centroids; 
+    	ArrayList<Point> current_centroids = new ArrayList<Point>();
+    	current_centroids.addAll(KMeans.centroids); 
     			
     	for(int i=0; i<maxIterations; i++){
     		
-    		try{
-    			System.out.println("Creating job with id "+i);
-	    		Job init_job = createUpdateJob(i, inputDirectory, outputDirectory);
-	    		init_job.waitForCompletion(true);
-	    		
-	    		ArrayList<Point> new_centroids = KMeans.centroids;
-	    		
-	    		if(current_centroids == new_centroids){
-	    			System.out.println("Centroids have not changed in this iteration. Thus exiting");
-	    			return i;
-	    		}
-    		} catch(IOException e){
-    			System.out.println("IOException in creating jobs");
-    		} catch (InterruptedException e) {
-    			System.out.println("InterruptedException while emitting from mapper");
-    		} catch (ClassNotFoundException e) {
-    			System.out.println("ClassNotFoundException while emitting from mapper");
+			System.out.println("Creating job with id "+i);
+    		Job init_job = createUpdateJob(i, inputDirectory, outputDirectory);
+    		init_job.waitForCompletion(true);
+    		
+    		ArrayList<Point> new_centroids = KMeans.centroids;
+    		System.out.println(new_centroids.get(0).toString());
+    		
+    		//If the centroids have not changed in this iteration, we exit
+    		if(!isCentroidChanged(current_centroids, new_centroids)){
+    			System.out.println("Centroids have not changed in this iteration. Thus exiting");
+    			return i+1;
     		}
     		
+    		//Clearing the current centroids and making the new centroids the current ones
+    		//for the next iteration
+    		current_centroids.clear();
+    		current_centroids.addAll(new_centroids);		
     	}
     	return maxIterations;
+    }
+    
+    /**
+     * Checks to see if the old and new centroid are the same or have changed
+     */
+    public static boolean isCentroidChanged(ArrayList<Point> old_centroid, ArrayList<Point> new_centroid) {
+    	
+    	//If the dimensions are not the same, the centroids have definitely changed
+    	if (old_centroid.size() != new_centroid.size()) 
+    		return true;
+    	
+    	//Return true even if one of the centroids is different
+    	for (int i = 0; i < old_centroid.size(); i++) {
+    		if (old_centroid.get(i).compareTo(new_centroid.get(i)) != 0) {
+    			return true;
+    		}
+    	}
+    	return false;	
     }
 }
