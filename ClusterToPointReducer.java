@@ -16,8 +16,9 @@ public class ClusterToPointReducer extends Reducer<IntWritable, Point, Text, Tex
 	public void reduce(IntWritable key, Iterable<Point> values, Context context){
 		
 		Log log = LogFactory.getLog(ClusterToPointReducer.class);
-		ArrayList<Point> centroids = KMeans.centroids;
 		log.info("Inside reducer");
+		
+		ArrayList<Point> centroids = KMeans.centroids;
 		
 		//Finds the mean of all the points to create a new centroid for the given cluster
 		int counter = 0;
@@ -31,6 +32,11 @@ public class ClusterToPointReducer extends Reducer<IntWritable, Point, Text, Tex
 
 			new_centroid = Point.addPoints(new_centroid, p);
 			counter++;
+		}
+		
+		//If there are no points in this centroids cluster
+		if(counter == 0 || new_centroid == null){
+			return;
 		}
 		
 		new_centroid = Point.multiplyScalar(new_centroid, 1.0f/(float)counter);

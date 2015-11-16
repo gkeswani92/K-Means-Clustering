@@ -1,0 +1,9 @@
+dimensions 2, k = 3
+
+Iteration 1
+Centroids 
+3 2
+3 -3.5
+-3.75 -3.5
+
+

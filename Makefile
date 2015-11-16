@@ -49,3 +49,23 @@ ktest2:
 	rm -rf output/
 	rm -f centroids
 	CLASSPATH=$(CLASS_PATH) $(HADOOP) jar $(MAIN).jar $(MAIN) 4 2 kmeans_test2/points/points1.txt output kmeans_test2/centroids/centroids.txt
+	
+ktest3:
+	rm -rf output/
+	rm -f centroids
+	CLASSPATH=$(CLASS_PATH) $(HADOOP) jar $(MAIN).jar $(MAIN) 3 2 kmeans_test3/points/points1.txt output kmeans_test3/centroids/centroids.txt
+	
+ktest4:
+	rm -rf output/
+	rm -f centroids
+	CLASSPATH=$(CLASS_PATH) $(HADOOP) jar $(MAIN).jar $(MAIN) 2 2 kmeans_test4/points/points1.txt output kmeans_test4/centroids/centroids.txt
+	
+ktest5:
+	rm -rf output/
+	rm -f centroids
+	CLASSPATH=$(CLASS_PATH) $(HADOOP) jar $(MAIN).jar $(MAIN) 2 2 kmeans_test5/points/points1.txt output kmeans_test5/centroids/centroids.txt
+
+ktest6:
+	rm -rf output/
+	rm -f centroids
+	CLASSPATH=$(CLASS_PATH) $(HADOOP) jar $(MAIN).jar $(MAIN) 2 2 kmeans_test6/points/points1.txt output
